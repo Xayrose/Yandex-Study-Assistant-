@@ -27,6 +27,7 @@ jobs:
         run: |
           mkdir -p _site/downloads
           cp index.html _site/index.html
+          cp logo.svg _site/logo.svg
           cp -R assets _site/assets 2>/dev/null || true
           zip -r _site/downloads/yandex-study-assistant-extension.zip extension
       - name: Upload Pages artifact
