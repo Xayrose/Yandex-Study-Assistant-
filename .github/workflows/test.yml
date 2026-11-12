@@ -1,0 +1,23 @@
+name: Check extension
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: |
+          node --check extension/rules.js
+          node --check extension/content.js
+          node --check extension/popup.js
+          node --check extension/options.js
+      - name: Run solver tests
+        run: node tests/rules.test.js
