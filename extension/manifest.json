@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Yandex Study Assistant (без ИИ)",
+  "version": "3.4.0",
+  "description": "Локальная автоматизация заданий Яндекс Учебника: правила, формы и запоминание элементов управления.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://education.yandex.ru/*"],
+  "action": {"default_popup":"popup.html","default_title":"Yandex Study Assistant"},
+  "options_page":"options.html",
+  "content_scripts":[{"matches":["https://education.yandex.ru/*"],"js":["rules.js","content.js"],"run_at":"document_idle"}]
+}
