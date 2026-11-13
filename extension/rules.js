@@ -74,6 +74,17 @@
     function expr0(){let v=term();while(peek()==="+"||peek()==="-"){const o=eat(),q=term();v=o==="+"?v+q:v-q;}return v;}
     try{const v=expr0();return i===tokens.length&&Number.isFinite(v)?v:null;}catch{return null;}
   }
+
+  function solvePairs(raw){
+    const t=prep(raw);
+    if(!/соедините кодировк|соотнесите.*кодировк/.test(t))return null;
+    return [
+      {source:"KOI-8",target:/8-битн\S* кодировк\S* для кириллиц\S*.*стандарт\S*.*unix/i},
+      {source:"UTF-8",target:/символ\S* почти всех язык\S* мир/i},
+      {source:"ASCII",target:/7-битн\S* кодировк\S*.*латинск\S*.*128 символ/i}
+    ];
+  }
+
   function solveStructured(raw){
     const t=prep(raw),out=[];
     if(/даны три арифметическ|вычисли каждое выражение/.test(t)){
@@ -98,6 +109,6 @@
     if(excellent&&(/тебе удалось решить все задания|все задания выполнены|теперь ты можешь/.test(t)))return{action:{kind:"click",id:excellent.id},note:"Этап завершён: нажимаю «Отлично!»"};
     const finish=buttons.find(e=>/^завершить занятие$/i.test(cleanLabel(e.label)));
     if(finish&&inputs.length&&inputs.every(e=>(e.value||"").trim()))return{action:{kind:"click",id:finish.id},note:"Все итоговые поля заполнены: завершаю занятие"};if(isFinalText(raw)&&!hasQuestionUI)return{done:true,note:"Показан финальный экран."};if(isSuccessText(raw)&&next)return{action:{kind:"click",id:next.id},note:"Ответ принят — далее"};if(next&&!hasQuestionUI&&!prompt)return{action:{kind:"click",id:next.id},note:"Информационный слайд — далее"};const filled=inputs.length>0&&inputs.every(e=>(e.value||"").trim()!==""),checked=[...radios,...checkboxes,...roleOpts].some(e=>e.checked),answered=hasQuestionUI&&(inputs.length?filled:true)&&([...radios,...checkboxes,...roleOpts].length?checked||inputs.length>0:true);const sol=hasQuestionUI||options.length?solve(raw):null;let hint=null;if(sol){hint=sol.answer;if(inputs.length===1&&!(radios.length||checkboxes.length)){const inp=inputs[0];if(norm(inp.value)!==norm(sol.answer))return{action:{kind:"type",id:inp.id,value:sol.answer},note:sol.note};if(confirm)return{action:{kind:"click",id:confirm.id},note:"Ответ введён — отправляю"};}else if(!inputs.length){const hits=options.filter(o=>optionMatches(o.label,sol.answer));if(hits.length>=1){const target=hits[0],distinct=new Set(hits.map(h=>norm(h.label)));if(distinct.size===1){const other=options.filter(o=>o.checked&&o!==target&&!hits.includes(o));if(other.length&&checkboxes.length)return{pause:true,note:"Отмечен лишний вариант. Сними отметку вручную."};if(!hits.some(h=>h.checked))return{action:{kind:"click",id:target.id},note:sol.note};if(confirm)return{action:{kind:"click",id:confirm.id},note:"Вариант выбран — отправляю"};if(next)return{action:{kind:"click",id:next.id},note:"Вариант выбран — далее"};}else return{pause:true,note:`Ответ ${sol.answer} подходит сразу нескольким вариантам. Нужна проверка.`};}}}if(answered&&hasQuestionUI){if(confirm)return{action:{kind:"click",id:confirm.id},note:"Ответ внесён — отправляю"};if(next)return{action:{kind:"click",id:next.id},note:"Ответ внесён — далее"};}return hint?{hint}:null;}
-  const api={plan,solve,solveStructured,evalExpr,optionMatches,isErrorText,isSuccessText,isFinalText,isConfirmLabel,isNextLabel,isForbiddenLabel};
+  const api={plan,solve,solveStructured,solvePairs,evalExpr,optionMatches,isErrorText,isSuccessText,isFinalText,isConfirmLabel,isNextLabel,isForbiddenLabel};
   globalThis.YSA_RULES=api;if(typeof module!=="undefined")module.exports=api;
 })();
