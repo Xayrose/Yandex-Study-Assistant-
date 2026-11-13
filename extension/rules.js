@@ -66,7 +66,7 @@
 
 
   function baseExprValue(expr){
-    const normalized=expr.replace(/([0-9a-f]+)[₀-₉]+/gi,(m,a,off,str)=>a+"_"+[...m.slice(a.length)].map(c=>c.charCodeAt(0)-0x2080).join(""));
+    const normalized=expr.replace(/[−–]/g,"-").replace(/([0-9a-f]+)[₀-₉]+/gi,(m,a,off,str)=>a+"_"+[...m.slice(a.length)].map(c=>c.charCodeAt(0)-0x2080).join(""));
     const tokens=normalized.match(/[0-9a-f]+_\d+|\d+(?:\.\d+)?|[()+*/×-]/gi);if(!tokens||tokens.join("")!==normalized.replace(/\s/g,""))return null;
     let i=0;const peek=()=>tokens[i],eat=()=>tokens[i++];
     function atom(){const x=eat();if(x==="("){const v=expr0();if(eat()!==")")throw 0;return v;}const m=x&&x.match(/^([0-9a-f]+)_(\d+)$/i);if(m){const b=+m[2];if(b<2||b>16||[...m[1].toLowerCase()].some(c=>parseInt(c,16)>=b))throw 0;return parseInt(m[1],b);}if(x&&/^\d+(?:\.\d+)?$/.test(x))return +x;throw 0;}
