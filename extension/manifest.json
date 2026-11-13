@@ -1,14 +1,17 @@
 {
   "manifest_version": 3,
   "name": "Yandex Study Assistant",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Локальные решатели и быстрый облачный ИИ-помощник для заданий Яндекс Учебника.",
   "permissions": [
     "storage"
   ],
   "host_permissions": [
     "https://education.yandex.ru/*",
-    "https://generativelanguage.googleapis.com/*"
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.groq.com/*",
+    "https://openrouter.ai/*",
+    "https://api.cerebras.ai/*"
   ],
   "action": {
     "default_popup": "popup.html",
