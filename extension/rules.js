@@ -47,19 +47,19 @@
   function solveExtra(t){
     const out=[];
     let m;
-    m=t.match(/(\\d+(?:[.,]\\d+)?)\\s*%\\s*от\\s*(\\d+(?:[.,]\\d+)?)/);
+    m=t.match(/(\d+(?:[.,]\d+)?)\s*%\s*от\s*(\d+(?:[.,]\d+)?)/);
     if(m)out.push(fmt(parseFloat(m[1].replace(",","."))*parseFloat(m[2].replace(",","."))/100));
-    m=t.match(/(?:увеличьте|увеличить)\\s+(\\d+(?:[.,]\\d+)?)\\s+на\\s+(\\d+(?:[.,]\\d+)?)\\s*%/);
+    m=t.match(/(?:увеличьте|увеличить)\s+(\d+(?:[.,]\d+)?)\s+на\s+(\d+(?:[.,]\d+)?)\s*%/);
     if(m)out.push(fmt(parseFloat(m[1].replace(",","."))*(1+parseFloat(m[2].replace(",","."))/100)));
-    m=t.match(/(?:уменьшите|уменьшить)\\s+(\\d+(?:[.,]\\d+)?)\\s+на\\s+(\\d+(?:[.,]\\d+)?)\\s*%/);
+    m=t.match(/(?:уменьшите|уменьшить)\s+(\d+(?:[.,]\d+)?)\s+на\s+(\d+(?:[.,]\d+)?)\s*%/);
     if(m)out.push(fmt(parseFloat(m[1].replace(",","."))*(1-parseFloat(m[2].replace(",","."))/100)));
     if(/среднее арифметическое/.test(t)){
-      m=t.match(/чисел\\s*[:：]?\\s*([0-9\\s,;.+-]+?)(?:\\.|$|\\n)/);
-      if(m){const a=m[1].match(/[+-]?\\d+(?:[.,]\\d+)?/g)||[];if(a.length>=2&&a.length<=30)out.push(fmt(a.reduce((v,x)=>v+parseFloat(x.replace(",",".")),0)/a.length));}
+      m=t.match(/чисел\s*[:：]?\s*([0-9\s,;.+-]+?)(?:\.|$|\n)/);
+      if(m){const a=m[1].match(/[+-]?\d+(?:[.,]\d+)?/g)||[];if(a.length>=2&&a.length<=30)out.push(fmt(a.reduce((v,x)=>v+parseFloat(x.replace(",",".")),0)/a.length));}
     }
-    m=t.match(/(?:найдите|определите|вычислите)\\s+расстояние[^.?]*?скорост\\S*\\s+(\\d+(?:[.,]\\d+)?)\\s*км\\/ч[^.?]*?врем\\S*\\s+(\\d+(?:[.,]\\d+)?)\\s*ч/);
+    m=t.match(/(?:найдите|определите|вычислите)\s+расстояние[^.?]*?скорост\S*\s+(\d+(?:[.,]\d+)?)\s*км\/ч[^.?]*?врем\S*\s+(\d+(?:[.,]\d+)?)\s*ч/);
     if(m)out.push(fmt(parseFloat(m[1].replace(",","."))*parseFloat(m[2].replace(",","."))));
-    m=t.match(/(?:найдите|определите|вычислите)\\s+площадь\\s+квадрат[^.?]*?(?:сторон\\S*|стороны)\\s*(?:равн\\S*|длин\\S*)?\\s*(\\d+(?:[.,]\\d+)?)/);
+    m=t.match(/(?:найдите|определите|вычислите)\s+площадь\s+квадрат[^.?]*?(?:сторон\S*|стороны)\s*(?:равн\S*|длин\S*)?\s*(\d+(?:[.,]\d+)?)/);
     if(m)out.push(fmt(Math.pow(parseFloat(m[1].replace(",",".")),2)));
     return out.filter(Boolean);
   }
