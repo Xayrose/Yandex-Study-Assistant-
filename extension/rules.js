@@ -78,7 +78,7 @@
     const t=prep(raw),out=[];
     if(/даны три арифметическ|вычисли каждое выражение/.test(t)){
       const re=/([abc])\s*=\s*([^\n]+?)(?=\s+[abc]\s*=|$)/gi;let m;const vals={};
-      while((m=re.exec(t))){const v=baseExprValue(m[2].replace(/[.,;]+$/,""));if(v===null)return null;vals[m[1].toUpperCase()]=fmt(v);}
+      while((m=re.exec(t))){const v=baseExprValue(m[2].replace(/=\\s*[-+]?\\d+\\s*$/,"").replace(/[.,;]+$/,""));if(v===null)return null;vals[m[1].toUpperCase()]=fmt(v);}
       if(vals.A&&vals.B&&vals.C){out.push(vals.A,vals.B,vals.C);for(const [a,b] of [["A","B"],["B","C"],["A","C"]])out.push(+vals[a]>+vals[b]?">":+vals[a]<+vals[b]?"<":"=");return out;}
     }
     const p=t.match(/(\d+)\s*\^\s*(\d+)\s*\+\s*(\d+)\s*\^\s*(\d+)\s*[-−]\s*(\d+)/);
