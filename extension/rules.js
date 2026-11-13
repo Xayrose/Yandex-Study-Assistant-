@@ -64,6 +64,31 @@
     return out.filter(Boolean);
   }
 
+
+  function baseExprValue(expr){
+    const normalized=expr.replace(/([0-9a-f]+)[₀-₉]+/gi,(m,a,off,str)=>a+"_"+[...m.slice(a.length)].map(c=>c.charCodeAt(0)-0x2080).join(""));
+    const tokens=normalized.match(/[0-9a-f]+_\d+|\d+(?:\.\d+)?|[()+*/×-]/gi);if(!tokens||tokens.join("")!==normalized.replace(/\s/g,""))return null;
+    let i=0;const peek=()=>tokens[i],eat=()=>tokens[i++];
+    function atom(){const x=eat();if(x==="("){const v=expr0();if(eat()!==")")throw 0;return v;}const m=x&&x.match(/^([0-9a-f]+)_(\d+)$/i);if(m){const b=+m[2];if(b<2||b>16||[...m[1].toLowerCase()].some(c=>parseInt(c,16)>=b))throw 0;return parseInt(m[1],b);}if(x&&/^\d+(?:\.\d+)?$/.test(x))return +x;throw 0;}
+    function term(){let v=atom();while(peek()==="*"||peek()==="×"||peek()==="/"){const o=eat(),q=atom();v=o==="/"?(q?v/q:NaN):v*q;}return v;}
+    function expr0(){let v=term();while(peek()==="+"||peek()==="-"){const o=eat(),q=term();v=o==="+"?v+q:v-q;}return v;}
+    try{const v=expr0();return i===tokens.length&&Number.isFinite(v)?v:null;}catch{return null;}
+  }
+  function solveStructured(raw){
+    const t=prep(raw),out=[];
+    if(/даны три арифметическ|вычисли каждое выражение/.test(t)){
+      const re=/([abc])\s*=\s*([^\n]+?)(?=\s+[abc]\s*=|$)/gi;let m;const vals={};
+      while((m=re.exec(t))){const v=baseExprValue(m[2].replace(/[.,;]+$/,""));if(v===null)return null;vals[m[1].toUpperCase()]=fmt(v);}
+      if(vals.A&&vals.B&&vals.C){out.push(vals.A,vals.B,vals.C);for(const [a,b] of [["A","B"],["B","C"],["A","C"]])out.push(+vals[a]>+vals[b]?">":+vals[a]<+vals[b]?"<":"=");return out;}
+    }
+    const p=t.match(/(\d+)\s*\^\s*(\d+)\s*\+\s*(\d+)\s*\^\s*(\d+)\s*[-−]\s*(\d+)/);
+    if(p&&/основани\S*\s+3|троичн/.test(t)){
+      const e1=+p[1]===9?2*+p[2]:null,e2=+p[4],e3=+p[5]===9?2:null;
+      if(e1!==null){const value=3n**BigInt(e1)+3n**BigInt(e2)-3n**BigInt(e3),digits=value.toString(3);out.push(String(e1),String(e2),String(e3),String(e1),String(e2),String(e3),String((digits.match(/2/g)||[]).length));return out;}
+    }
+    return null;
+  }
+
   function solve(raw){const t=prep(raw),all=[...solveBase(t).map(a=>({a,n:"перевод между системами счисления"})),...solveUnits(t).map(a=>({a,n:"единицы информации"})),...solveVolume(t).map(a=>({a,n:"информационный объём"})),...solveAlphabet(t).map(a=>({a,n:"алфавит/кодирование"})),...solveArith(t).map(a=>({a,n:"арифметика"})),...solveExtra(t).map(a=>({a,n:"проценты, среднее, скорость или геометрия"}))],uniq=[...new Set(all.map(x=>x.a))];if(uniq.length!==1)return null;return{answer:uniq[0],note:`Посчитано кодом (${all[0].n}): ${uniq[0]}`};}
   function optionMatches(label,ans){const l=unsub(norm(label)).replace(/,/g,"."),a=String(ans).toLowerCase(),stripped=l.replace(/\s+/g,"");if(stripped===a)return true;const tokens=l.match(/[0-9a-f]+(?:\.\d+)?(?:_\d+)?/g)||[];if(!tokens.length)return false;const first=tokens[0].replace(/_\d+$/,"");return first===a&&/\d/.test(first);}
   function plan(page){const raw=page.text||"",t=norm(raw),els=(page.elements||[]).filter(e=>!e.disabled),buttons=els.filter(e=>e.tag==="button"||e.role==="button"),inputs=els.filter(e=>["input","textarea"].includes(e.tag)&&!/^(hidden|button|submit|reset|checkbox|radio|file|password|search)$/.test(e.type||"")),radios=els.filter(e=>e.role==="radio"||e.type==="radio"),checkboxes=els.filter(e=>e.role==="checkbox"||e.type==="checkbox"),roleOpts=els.filter(e=>e.role==="option"),labels=els.filter(e=>e.tag==="label");let options=[...radios,...checkboxes,...roleOpts];if(!options.length)options=labels.filter(l=>l.label);const next=buttons.find(e=>isNextLabel(e.label)),confirm=buttons.find(e=>isConfirmLabel(e.label)),prompt=/выберите|укажите|введите|ответьте|решите|найдите|определите|сколько|чему равн|какой вариант|заполните|соотнесите|перетащите|вычислите|переведите|запишите/.test(t),hasQuestionUI=inputs.length||radios.length||checkboxes.length||roleOpts.length;if(isErrorText(raw))return{pause:true,note:"Платформа показала неверный ответ. Останавливаюсь, чтобы не тратить попытки."};
@@ -73,6 +98,6 @@
     if(excellent&&(/тебе удалось решить все задания|все задания выполнены|теперь ты можешь/.test(t)))return{action:{kind:"click",id:excellent.id},note:"Этап завершён: нажимаю «Отлично!»"};
     const finish=buttons.find(e=>/^завершить занятие$/i.test(cleanLabel(e.label)));
     if(finish&&inputs.length&&inputs.every(e=>(e.value||"").trim()))return{action:{kind:"click",id:finish.id},note:"Все итоговые поля заполнены: завершаю занятие"};if(isFinalText(raw)&&!hasQuestionUI)return{done:true,note:"Показан финальный экран."};if(isSuccessText(raw)&&next)return{action:{kind:"click",id:next.id},note:"Ответ принят — далее"};if(next&&!hasQuestionUI&&!prompt)return{action:{kind:"click",id:next.id},note:"Информационный слайд — далее"};const filled=inputs.length>0&&inputs.every(e=>(e.value||"").trim()!==""),checked=[...radios,...checkboxes,...roleOpts].some(e=>e.checked),answered=hasQuestionUI&&(inputs.length?filled:true)&&([...radios,...checkboxes,...roleOpts].length?checked||inputs.length>0:true);const sol=hasQuestionUI||options.length?solve(raw):null;let hint=null;if(sol){hint=sol.answer;if(inputs.length===1&&!(radios.length||checkboxes.length)){const inp=inputs[0];if(norm(inp.value)!==norm(sol.answer))return{action:{kind:"type",id:inp.id,value:sol.answer},note:sol.note};if(confirm)return{action:{kind:"click",id:confirm.id},note:"Ответ введён — отправляю"};}else if(!inputs.length){const hits=options.filter(o=>optionMatches(o.label,sol.answer));if(hits.length>=1){const target=hits[0],distinct=new Set(hits.map(h=>norm(h.label)));if(distinct.size===1){const other=options.filter(o=>o.checked&&o!==target&&!hits.includes(o));if(other.length&&checkboxes.length)return{pause:true,note:"Отмечен лишний вариант. Сними отметку вручную."};if(!hits.some(h=>h.checked))return{action:{kind:"click",id:target.id},note:sol.note};if(confirm)return{action:{kind:"click",id:confirm.id},note:"Вариант выбран — отправляю"};if(next)return{action:{kind:"click",id:next.id},note:"Вариант выбран — далее"};}else return{pause:true,note:`Ответ ${sol.answer} подходит сразу нескольким вариантам. Нужна проверка.`};}}}if(answered&&hasQuestionUI){if(confirm)return{action:{kind:"click",id:confirm.id},note:"Ответ внесён — отправляю"};if(next)return{action:{kind:"click",id:next.id},note:"Ответ внесён — далее"};}return hint?{hint}:null;}
-  const api={plan,solve,evalExpr,optionMatches,isErrorText,isSuccessText,isFinalText,isConfirmLabel,isNextLabel,isForbiddenLabel};
+  const api={plan,solve,solveStructured,evalExpr,optionMatches,isErrorText,isSuccessText,isFinalText,isConfirmLabel,isNextLabel,isForbiddenLabel};
   globalThis.YSA_RULES=api;if(typeof module!=="undefined")module.exports=api;
 })();
