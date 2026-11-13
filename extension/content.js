@@ -35,6 +35,12 @@
     const excellent=f.buttons.find(x=>/^отлично!?$/i.test(norm(x.label)));
     if(excellent&&/(тебе удалось решить все задания|теперь ты можешь|все задания выполнены)/i.test(norm(page.text)))return{action:{kind:"click",id:excellent.id},note:"Этап пройден, нажимаю «Отлично!»",source:"navigation"};
     const finish=f.buttons.find(x=>/^завершить занятие$/i.test(norm(x.label)));
+    if(finish&&f.inputs.length&&f.inputs.every(x=>clean(x.value)))return{action:{kind:"click",id:finish.id},note:"Итоговые поля заполнены, завершаю занятие",source:"navigation"};
+    const forward=f.buttons.find(x=>/^(вперед!?|продолжение|показать продолжение|читать дальше)$/i.test(norm(x.label)));
+    if(forward&&!f.inputs.length&&!opts.length)return{action:{kind:"click",id:forward.id},note:"Информационный слайд, нажимаю «Продолжение»",source:"navigation"};
+    const excellent=f.buttons.find(x=>/^отлично!?$/i.test(norm(x.label)));
+    if(excellent&&/(тебе удалось решить все задания|теперь ты можешь|все задания выполнены)/i.test(norm(page.text)))return{action:{kind:"click",id:excellent.id},note:"Этап пройден, нажимаю «Отлично!»",source:"navigation"};
+    const finish=f.buttons.find(x=>/^завершить занятие$/i.test(norm(x.label)));
     if(finish&&f.inputs.length&&f.inputs.every(x=>clean(x.value)))return{action:{kind:"click",id:finish.id},note:"Итоговые поля заполнены, завершаю занятие",source:"navigation"};if(R().isFinalText(page.text)&&!f.inputs.length&&!opts.length)return{done:true,note:"Финальный экран урока обнаружен."};if(R().isSuccessText(page.text)&&next)return{action:{kind:"click",id:next.id},note:"Ответ принят, перехожу дальше",source:"navigation"};if(!f.inputs.length&&!opts.length&&!hasQuestionText(page.text)&&next)return{action:{kind:"click",id:next.id},note:"Информационный слайд, перехожу дальше",source:"navigation"};const structured=R().solveStructured?.(page.text);
     if(structured&&structured.length===f.inputs.length+f.selects.length&&structured.length>1){
       const actions=[...f.inputs.map((x,i)=>({kind:"type",id:x.id,value:structured[i]})),...f.selects.map((x,i)=>({kind:"select",id:x.id,value:structured[f.inputs.length+i]}))];
