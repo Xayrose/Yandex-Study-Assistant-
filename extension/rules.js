@@ -88,12 +88,23 @@
   function solveStructured(raw){
     const t=prep(raw),out=[];
     if(/даны три арифметическ|вычисли каждое выражение/.test(t)){
-      const re=/(?:^|[;\n])\s*([abc])\s*=\s*(.*?)(?=;\s*[abc]\s*=|$)/gi;let m;const vals={};
-      while((m=re.exec(t))){const v=baseExprValue(m[2].replace(/=\s*[-+]?\d+\s*$/,"").replace(/[.,;]+$/,""));if(v===null)return null;vals[m[1].toUpperCase()]=fmt(v);}
-      if(vals.A&&vals.B&&vals.C){out.push(vals.A,vals.B,vals.C);for(const [a,b] of [["A","B"],["B","C"],["A","C"]])out.push(+vals[a]>+vals[b]?">":+vals[a]<+vals[b]?"<":"=");return out;}
+      const vals={};
+      // Each task is a semicolon-delimited statement: A = expression = result.
+      for(const part of t.split(/[;\\n]+/)){
+        const m=part.match(/^\\s*([abc])\\s*=\\s*(.*?)\\s*=\\s*[-+]?\\d+\\s*$/i);
+        if(!m)continue;
+        const value=baseExprValue(m[2].trim());
+        if(value===null)return null;
+        vals[m[1].toUpperCase()]=fmt(value);
+      }
+      if(vals.A&&vals.B&&vals.C){
+        out.push(vals.A,vals.B,vals.C);
+        for(const [a,b] of [["A","B"],["B","C"],["A","C"]])out.push(+vals[a]>+vals[b]?">":+vals[a]<+vals[b]?"<":"=");
+        return out;
+      }
     }
-    const p=t.match(/(\d+)\s*\^\s*(\d+)\s*\+\s*(\d+)\s*\^\s*(\d+)\s*[-−]\s*(\d+)/);
-    if(p&&/основани\S*\s+3|троичн/.test(t)){
+    const p=t.match(/(\\d+)\\s*\\^\\s*(\\d+)\\s*\\+\\s*(\\d+)\\s*\\^\\s*(\\d+)\\s*[-−]\\s*(\\d+)/);
+    if(p&&/основани\\S*\\s+3|троичн/.test(t)){
       const e1=+p[1]===9?2*+p[2]:null,e2=+p[4],e3=+p[5]===9?2:null;
       if(e1!==null){const value=3n**BigInt(e1)+3n**BigInt(e2)-3n**BigInt(e3),digits=value.toString(3);out.push(String(e1),String(e2),String(e3),String(e1),String(e2),String(e3),String((digits.match(/2/g)||[]).length));return out;}
     }
