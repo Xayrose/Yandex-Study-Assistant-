@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Yandex Study Assistant",
-  "version": "4.1.0",
-  "description": "Локальные решатели и быстрый облачный ИИ-помощник для заданий Яндекс Учебника.",
+  "version": "4.3.0",
+  "description": "Локальные решатели и автоматический AI fallback для заданий Яндекс Учебника.",
   "permissions": [
     "storage"
   ],
@@ -26,9 +26,14 @@
       ],
       "js": [
         "rules.js",
-        "content.js"
+        "rules-compat.js",
+        "content.js",
+        "auto-ai.js"
       ],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
 }
