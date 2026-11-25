@@ -1,0 +1,1 @@
+(() => {const a=globalThis.YSA_RULES;if(!a||a.__ysaStructuredCompat)return;const old=a.solveStructured;a.solveStructured=raw=>old(String(raw||"").replace(/(\b(?:выражения|выражение)\.?)\s+([ABC])\s*=/i,"$1\n$2 =").replace(/;\s*([ABC])\s*=/gi,"\n$1 ="));a.__ysaStructuredCompat=true})();
